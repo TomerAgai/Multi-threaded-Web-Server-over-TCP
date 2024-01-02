@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Computer Networks 2023: Exercise 1</title>
+    <style>
+        @keyframes movingTitle {
+            0% {
+                transform: translateX(0);
+            }
+
+            50% {
+                transform: translateX(20px);
+            }
+
+            100% {
+                transform: translateX(0);
+            }
+        }
+
+        .blue-title {
+            color: blue;
+            animation: movingTitle 2s linear infinite;
+        }
+
+        .red-title {
+            color: red;
+        }
+
+        .image-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .image-box {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 10px;
+        }
+
+        .image-container img {
+            width: auto;
+            object-fit: cover;
+        }
+
+
+        .image-container img {
+            height: 400px;
+            width: 100%;
+        }
+
+        .image-caption {
+            font-size: 20px;
+            font-weight: bold;
+            color: #002766
+        }
+
+        .link-container a {
+            text-decoration: none;
+            color: #0056b3;
+            font-size: x-large;
+            font-weight: bold;
+            margin: 10px;
+            display: inline-block;
+            transition: color 0.3s ease;
+        }
+
+        .link-container a:hover,
+        .link-container a:focus {
+            color: #002766;
+            text-decoration: underline;
+        }
+
+        .form-container {
+            width: 80%;
+            margin: 20px auto;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        form label {
+            margin-top: 10px;
+        }
+
+        form input,
+        form textarea {
+            margin-top: 5px;
+            line-height: 1.5;
+        }
+
+        form input[type="text"],
+        form textarea {
+            width: 100%;
+            padding: 8px;
+        }
+
+        form textarea {
+            height: 150px;
+        }
+
+        form button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <h1 class="blue-title">Computer networks 2023 : Exercise 1</h1>
+    <h2 class="red-title">Tomer Agai, Adi Algazi</h2>
+    <div class="image-container">
+        <div class="image-box">
+            <img src="/Assets/dubai-1980.jpg" alt="Dubai in 1980">
+            <span class="image-caption">Dubai in 1980</span>
+        </div>
+        <div class="image-box">
+            <img src="/Assets/dubai-2023.jpg" alt="Dubai in 2023">
+            <span class="image-caption">Dubai in 2023</span>
+        </div>
+    </div>
+    <div class="link-container">
+        <a href="https://moodle.runi.ac.il/2024/course/view.php?id=2401572" target="_blank">Course Website</a>
+        <a href="https://www.flightradar24.com/41.98,-87.92/13" target="_blank">Fav Website</a>
+    </div>
+    <div class="form-container">
+        <form action="params_info.html" method="POST">
+            <label for="sender">Sender:</label>
+            <input type="text" id="sender" name="sender">
+
+            <label for="receiver">Receiver:</label>
+            <input type="text" id="receiver" name="receiver">
+
+            <label for="subject">Subject:</label>
+            <input type="text" id="subject" name="subject">
+
+            <label for="message">Message:</label>
+            <textarea id="message" name="message"></textarea>
+
+            <button type="submit">Submit</button>
+        </form>
+
+
+    </div>
+</body>
+
+</html>

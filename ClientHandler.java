@@ -12,32 +12,46 @@ class ClientHandler implements Runnable {
     }
 
     public void run() {
+        BufferedReader in = null;
+        OutputStream out = null;
         try {
-            BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-            OutputStream out = clientSocket.getOutputStream();
+            in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+            out = clientSocket.getOutputStream();
 
-            try {
-                HTTPRequest httpRequest = new HTTPRequest(in);
+            System.out.println("Handling request from " + clientSocket.getRemoteSocketAddress());
+
+            String requestLine = in.readLine();
+            if (requestLine == null || requestLine.isEmpty()) {
+                System.out.println("Received an empty request from " + clientSocket.getRemoteSocketAddress());
+            } else {
+                HTTPRequest httpRequest = new HTTPRequest(in, requestLine);
                 HTTPRequestHandler requestHandler = new HTTPRequestHandler(httpRequest, out, config);
                 requestHandler.handleRequest();
-            } catch (IOException e) {
-                // Handle specific bad request scenario
-                ResponseUtility.sendErrorResponse(out, 400, "Bad Request");
             }
-
-            // Close streams and socket
-            in.close();
-            out.close();
-            clientSocket.close();
-
-        } catch (Exception e) {
-            // Log the error and send a 500 Internal Server Error response
-            e.printStackTrace();
+        } catch (IOException e) {
+            System.out.println("Error handling client request: " + e.getMessage());
+            if (!clientSocket.isClosed()) {
+                try {
+                    ResponseUtility.sendErrorResponse(out, 400, "Bad Request");
+                } catch (SocketException se) {
+                    System.out.println("Client closed connection: " + se.getMessage());
+                } catch (IOException ioException) {
+                    // Handle other IOExceptions that might occur when sending the error response
+                    System.out.println("Error sending error response: " + ioException.getMessage());
+                }
+            }
+        } finally {
             try {
-                ResponseUtility.sendErrorResponse(clientSocket.getOutputStream(), 500, "Internal Server Error");
+                if (in != null)
+                    in.close();
+                if (out != null)
+                    out.close();
+                if (!clientSocket.isClosed())
+                    clientSocket.close();
             } catch (IOException ioException) {
-                ioException.printStackTrace();
+                System.out.println("Error closing resources: " + ioException.getMessage());
             }
         }
     }
+
 }

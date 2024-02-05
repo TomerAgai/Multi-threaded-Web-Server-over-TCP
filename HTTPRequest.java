@@ -1,7 +1,10 @@
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -11,17 +14,16 @@ public class HTTPRequest {
     private Map<String, String> headers;
     private Map<String, String> parameters;
 
-    public HTTPRequest(BufferedReader reader) throws IOException {
+    public HTTPRequest(BufferedReader reader, String requestLine) throws IOException {
         this.headers = new HashMap<>();
         this.parameters = new HashMap<>();
 
-        // Parse the request line
-        String requestLine = reader.readLine();
         if (requestLine != null && !requestLine.isEmpty()) {
             String[] requestParts = requestLine.split(" ");
             if (requestParts.length >= 2) {
                 this.method = requestParts[0];
                 this.path = requestParts[1];
+                this.path = sanitizePath(this.path);
             } else {
                 throw new IOException("Invalid Request Line");
             }
@@ -47,6 +49,14 @@ public class HTTPRequest {
                 }
             }
 
+            if ("GET".equals(this.method) && this.path.contains("?")) {
+                String[] pathAndQuery = this.path.split("\\?", 2);
+                this.path = pathAndQuery[0];
+                if (pathAndQuery.length > 1) {
+                    parseQueryParameters(pathAndQuery[1]); // Parse and store GET query parameters
+                }
+            }
+
             // Parse request body if method is POST
             if ("POST".equals(this.method)) {
                 try {
@@ -56,6 +66,8 @@ public class HTTPRequest {
                     throw new IOException("Invalid Content-Length Format");
                 }
             }
+        } else {
+            throw new IOException("Empty Request");
         }
     }
 
@@ -72,6 +84,25 @@ public class HTTPRequest {
                 parameters.put(keyValue[0], keyValue[1]);
             }
         }
+    }
+
+    private void parseQueryParameters(String query) throws UnsupportedEncodingException {
+        if (query == null || query.isEmpty()) {
+            return;
+        }
+        String[] pairs = query.split("&");
+        for (String pair : pairs) {
+            int idx = pair.indexOf("=");
+            if (idx > 0 && idx < pair.length() - 1) {
+                String key = URLDecoder.decode(pair.substring(0, idx), StandardCharsets.UTF_8.name());
+                String value = URLDecoder.decode(pair.substring(idx + 1), StandardCharsets.UTF_8.name());
+                parameters.put(key, value);
+            }
+        }
+    }
+
+    private String sanitizePath(String path) {
+        return path.replaceAll("\\.\\.", "");
     }
 
     // Getter methods

@@ -1,19 +1,40 @@
-import java.net.*;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.io.*;
 import java.util.Properties;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class MultiThreadedServer {
+    private static ExecutorService executor;
+    private static int maxThreads;
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         Properties config = loadConfigurations();
+        maxThreads = Integer.parseInt(config.getProperty("MaxThreads", "10"));
         int port = Integer.parseInt(config.getProperty("Port", "8080"));
-        ServerSocket serverSocket = new ServerSocket(port);
 
-        System.out.println("Server started on port " + port);
+        // Create a thread pool
+        executor = Executors.newFixedThreadPool(maxThreads);
 
-        while (true) {
-            Socket clientSocket = serverSocket.accept();
-            new Thread(new ClientHandler(clientSocket, config)).start();
+        try (ServerSocket serverSocket = new ServerSocket(port)) {
+            System.out.println("Server started on port " + port);
+
+            while (true) {
+                try {
+                    Socket clientSocket = serverSocket.accept();
+                    // Submit a new task to the thread pool rather than creating a new thread
+                    executor.execute(new ClientHandler(clientSocket, config));
+                } catch (IOException e) {
+                    System.out.println("Error accepting client connection: " + e.getMessage());
+                }
+            }
+        } catch (IOException e) {
+            System.out.println("Error starting server: " + e.getMessage());
+        } finally {
+            if (executor != null) {
+                executor.shutdown(); // Initiates an orderly shutdown
+            }
         }
     }
 

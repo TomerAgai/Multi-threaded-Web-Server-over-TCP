@@ -29,11 +29,9 @@ public class ResponseUtility {
         } else if (path.endsWith(".jpg") || path.endsWith(".jpeg")) {
             return "image/jpeg";
         } else if (path.endsWith(".ico")) {
-            return "icon";
+            return "image/x-icon";
         } else {
-            return "application/octet-stream"; // Default type for unknown files
+            return "application/octet-stream";
         }
     }
-
-    // Additional utility methods can be added as needed
 }

@@ -18,16 +18,12 @@ class ClientHandler implements Runnable {
             in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             out = clientSocket.getOutputStream();
 
-            System.out.println("Handling request from " + clientSocket.getRemoteSocketAddress());
+            // System.out.println("Handling request from " +
+            // clientSocket.getRemoteSocketAddress());
+            HTTPRequest httpRequest = new HTTPRequest(in);
+            HTTPRequestHandler requestHandler = new HTTPRequestHandler(httpRequest, out, config);
+            requestHandler.handleRequest();
 
-            String requestLine = in.readLine();
-            if (requestLine == null || requestLine.isEmpty()) {
-                System.out.println("Received an empty request from " + clientSocket.getRemoteSocketAddress());
-            } else {
-                HTTPRequest httpRequest = new HTTPRequest(in, requestLine);
-                HTTPRequestHandler requestHandler = new HTTPRequestHandler(httpRequest, out, config);
-                requestHandler.handleRequest();
-            }
         } catch (IOException e) {
             System.out.println("Error handling client request: " + e.getMessage());
             if (!clientSocket.isClosed()) {

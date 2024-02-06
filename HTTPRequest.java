@@ -11,98 +11,99 @@ import java.util.Map;
 public class HTTPRequest {
     private String method;
     private String path;
-    private Map<String, String> headers;
-    private Map<String, String> parameters;
+    private Map<String, String> headers = new HashMap<>();
+    private Map<String, String> parameters = new HashMap<>();
 
-    public HTTPRequest(BufferedReader reader, String requestLine) throws IOException {
-        this.headers = new HashMap<>();
-        this.parameters = new HashMap<>();
-
-        if (requestLine != null && !requestLine.isEmpty()) {
-            String[] requestParts = requestLine.split(" ");
-            if (requestParts.length >= 2) {
-                this.method = requestParts[0];
-                this.path = requestParts[1];
-                this.path = sanitizePath(this.path);
-            } else {
-                throw new IOException("Invalid Request Line");
-            }
-
-            try {
-                new URI(path);
-            } catch (URISyntaxException e) {
-                throw new IOException("Invalid Request Path");
-            }
-
-            // Read and store headers
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (line.isEmpty()) {
-                    break; // Headers end with an empty line
-                }
-                String[] headerParts = line.split(": ");
-                if (headerParts.length >= 2) {
-                    headers.put(headerParts[0], headerParts[1]);
-                }
-                if (headerParts.length != 2) {
-                    throw new IOException("Malformed Header Line");
-                }
-            }
-
-            if ("GET".equals(this.method) && this.path.contains("?")) {
-                String[] pathAndQuery = this.path.split("\\?", 2);
-                this.path = pathAndQuery[0];
-                if (pathAndQuery.length > 1) {
-                    parseQueryParameters(pathAndQuery[1]); // Parse and store GET query parameters
-                }
-            }
-
-            // Parse request body if method is POST
-            if ("POST".equals(this.method)) {
-                try {
-                    int contentLength = Integer.parseInt(headers.get("Content-Length"));
-                    parseRequestBody(reader, contentLength);
-                } catch (NumberFormatException e) {
-                    throw new IOException("Invalid Content-Length Format");
-                }
-            }
-        } else {
+    public HTTPRequest(BufferedReader reader) throws IOException {
+        String requestLine = reader.readLine();
+        if (requestLine == null || requestLine.isEmpty()) {
             throw new IOException("Empty Request");
         }
+
+        System.out.println("\nReceived HTTP Request: " + requestLine);
+        String[] requestParts = requestLine.split(" ");
+        if (requestParts.length < 3) {
+            throw new IOException("Invalid Request Line");
+        }
+
+        this.method = requestParts[0];
+        int queryParamStart = requestParts[1].indexOf('?');
+        if (queryParamStart != -1) {
+            this.path = requestParts[1].substring(0, queryParamStart);
+            String queryString = requestParts[1].substring(queryParamStart + 1);
+            parseQueryParameters(queryString);
+        } else {
+            this.path = requestParts[1];
+        }
+
+        this.path = sanitizePath(this.path);
+
+        try {
+            new URI(this.path);
+        } catch (URISyntaxException e) {
+            throw new IOException("Invalid Request Path: " + this.path);
+        }
+
+        readHeaders(reader);
+
+        if ("POST".equals(this.method) && this.headers.containsKey("Content-Length")) {
+            parseRequestBody(reader);
+        }
+
+        System.out.println("Sanitized Path: " + this.path);
+        System.out.print(this.parameters.isEmpty() ? "" : "Parameters: " + this.parameters.toString() + "\n");
     }
 
-    private void parseRequestBody(BufferedReader reader, int contentLength) throws IOException {
+    private void readHeaders(BufferedReader reader) throws IOException {
+        String line;
+        while ((line = reader.readLine()) != null && !line.isEmpty()) {
+            int colonPos = line.indexOf(":");
+            if (colonPos == -1) {
+                throw new IOException("Malformed Header Line: " + line);
+            }
+            String headerName = line.substring(0, colonPos).trim();
+            String headerValue = line.substring(colonPos + 1).trim();
+            headers.put(headerName, headerValue);
+        }
+
+        // Log received HTTP request headers
+        System.out.println("Received HTTP Request Headers:");
+        headers.forEach((key, value) -> System.out.println(key + ": " + value));
+        System.out.println("**");
+    }
+
+    private void parseRequestBody(BufferedReader reader) throws IOException {
+        int contentLength = Integer.parseInt(headers.get("Content-Length"));
         char[] body = new char[contentLength];
         reader.read(body, 0, contentLength);
         String requestBody = new String(body);
-
-        // Basic implementation for parsing URL-encoded form data
-        String[] pairs = requestBody.split("&");
-        for (String pair : pairs) {
-            String[] keyValue = pair.split("=");
-            if (keyValue.length == 2) {
-                parameters.put(keyValue[0], keyValue[1]);
-            }
-        }
+        parseQueryParameters(requestBody);
     }
 
     private void parseQueryParameters(String query) throws UnsupportedEncodingException {
         if (query == null || query.isEmpty()) {
             return;
         }
-        String[] pairs = query.split("&");
-        for (String pair : pairs) {
+        if (method.equals("POST")) {
+            System.out.println("request body: " + query);
+        }
+        for (String pair : query.split("&")) {
             int idx = pair.indexOf("=");
             if (idx > 0 && idx < pair.length() - 1) {
                 String key = URLDecoder.decode(pair.substring(0, idx), StandardCharsets.UTF_8.name());
                 String value = URLDecoder.decode(pair.substring(idx + 1), StandardCharsets.UTF_8.name());
                 parameters.put(key, value);
+                System.out.println("Parameter: " + key + " = " + value);
             }
         }
     }
 
     private String sanitizePath(String path) {
-        return path.replaceAll("\\.\\.", "");
+        String decodedPath = URLDecoder.decode(path, StandardCharsets.UTF_8);
+        return decodedPath.replaceAll("/+\\.+/", "/")
+                .replaceAll("\\.\\./", "")
+                .replaceAll("%2e%2e%2f", "")
+                .replaceAll("\\.\\.", "");
     }
 
     // Getter methods

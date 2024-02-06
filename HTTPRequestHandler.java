@@ -9,8 +9,10 @@ public class HTTPRequestHandler {
     private final OutputStream outputStream;
     private final Properties config;
     private final ContentServer contentServer;
+    private boolean useChunkedEncoding;
 
-    public HTTPRequestHandler(HTTPRequest httpRequest, OutputStream outputStream, Properties config) {
+    public HTTPRequestHandler(HTTPRequest httpRequest, OutputStream outputStream, Properties config)
+            throws IOException {
         this.httpRequest = httpRequest;
         this.outputStream = outputStream;
         this.config = config;
@@ -20,6 +22,7 @@ public class HTTPRequestHandler {
     public void handleRequest() throws IOException {
         String method = httpRequest.getMethod();
         String path = httpRequest.getPath();
+        useChunkedEncoding = "yes".equalsIgnoreCase(httpRequest.getHeaders().get("chunked"));
         // System.out.println("http request: " + httpRequest.getHeaders() + " " +
         // httpRequest.getParameters());
         // System.out.println("Handling " + method + " request for " + path);
@@ -42,20 +45,18 @@ public class HTTPRequestHandler {
         }
     }
 
-    private void handleGETorHEADRequest(String path, Boolean isGet) throws IOException {
+    private void handleGETorHEADRequest(String path, boolean isGet) throws IOException {
 
         if ("/".equals(path)) {
-            System.out.println("Serving home page");
-            contentServer.serveStaticContent(outputStream, config.getProperty("DefaultPage"), isGet);
-        } else if (path.startsWith("/Asset") || path.startsWith("/favicon.ico")) {
-            System.out.println("Serving asset: " + path);
-            contentServer.serveStaticContent(outputStream, path, isGet);
+            contentServer.serveStaticContent(outputStream, config.getProperty("DefaultPage"), isGet,
+                    useChunkedEncoding);
         } else {
-            ResponseUtility.sendErrorResponse(outputStream, 404, "Not Found");
+            contentServer.serveStaticContent(outputStream, path, isGet, useChunkedEncoding);
         }
     }
 
     private void handlePOSTRequest(String path) throws IOException {
+
         if ("/params_info.html".equals(path)) {
             StringBuilder responseHtml = new StringBuilder("<html><body>");
             responseHtml.append("<h1>Submitted Parameters</h1>");
@@ -64,8 +65,8 @@ public class HTTPRequestHandler {
                 responseHtml.append("<p>").append(entry.getKey()).append(": ").append(decodedValue).append("</p>");
             }
             responseHtml.append("</body></html>");
-
-            ResponseUtility.sendOKResponse(outputStream, "text/html", responseHtml.toString().getBytes());
+            ResponseUtility.sendOKResponse(outputStream, "text/html", responseHtml.toString().getBytes(),
+                    useChunkedEncoding);
         } else {
             ResponseUtility.sendErrorResponse(outputStream, 404, "Not Found");
         }
@@ -87,6 +88,7 @@ public class HTTPRequestHandler {
             response.setLength(response.length() - 1); // Remove the last "&"
         }
 
-        ResponseUtility.sendOKResponse(outputStream, "message/http", response.toString().getBytes());
+        ResponseUtility.sendOKResponse(outputStream, "message/http", response.toString().getBytes(),
+                useChunkedEncoding);
     }
 }

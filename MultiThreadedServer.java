@@ -56,6 +56,7 @@ public class MultiThreadedServer {
             }
         } catch (IOException ex) {
             ex.printStackTrace();
+            System.out.println("Error loading configuration: " + ex.getMessage());
         }
         return config;
     }

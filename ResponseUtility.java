@@ -98,7 +98,15 @@ public class ResponseUtility {
             return "image/jpeg";
         } else if (path.endsWith(".ico")) {
             return "image/x-icon";
-        } else {
+        } else if (path.endsWith(".mp4")) {
+            return "video/mp4"; 
+        } else if (path.endsWith(".pdf")) {
+            return "application/pdf"; 
+        } else if (path.endsWith(".doc") || path.endsWith(".docx")) {
+            return "application/msword"; 
+        } else if (path.endsWith(".css")) {
+            return "text/css"; 
+        }else {
             return "application/octet-stream";
         }
     }

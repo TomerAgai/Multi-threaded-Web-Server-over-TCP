@@ -13,10 +13,16 @@ public class ContentServer {
             throws IOException {
         String filePath = path;
         File file = new File(rootDirectory, filePath);
-
+        System.out.println("file path:" + path);
         if (file.isDirectory()) {
-            ResponseUtility.sendErrorResponse(out, 403, "Forbidden");
-            System.out.println("Access to directories is forbidden: " + path);
+            System.out.println("is a directory");
+            // Instead of forbidding access, generate directory listing
+            if (sendBody) {
+                // Pass the requested path to generate correct links in the directory listing
+                generateAndSendDirectoryListing(out, file, path, useChunkedEncoding); 
+            } else {
+                ResponseUtility.sendOKResponse(out, "text/html", new byte[0], useChunkedEncoding);
+            }
             return;
         }
         if (!file.exists()) {
@@ -27,5 +33,26 @@ public class ContentServer {
 
         String contentType = ResponseUtility.getContentType(filePath);
         ResponseUtility.sendFileOkResponse(out, contentType, file, sendBody, useChunkedEncoding);
+    }
+
+    private void generateAndSendDirectoryListing(OutputStream out, File directory, String requestedPath, boolean useChunkedEncoding) throws IOException {
+        StringBuilder listingHtml = new StringBuilder("<html><head><title>Directory Listing</title></head><body>");
+        listingHtml.append("<h1>Index of ").append(requestedPath).append("</h1><ul>");
+
+        // Adjust for proper navigation within subdirectories
+        String parentPath = requestedPath.endsWith("/") ? requestedPath : requestedPath + "/";
+        
+        File[] files = directory.listFiles();
+        if (files != null) {
+            for (File f : files) {
+                String name = f.getName();
+                // Correctly form the URL for each file or directory
+                listingHtml.append("<li><a href=\"").append(parentPath).append(name).append(f.isDirectory() ? "/" : "").append("\">").append(name).append("</a></li>");
+            }
+        }
+
+        listingHtml.append("</ul></body></html>");
+        byte[] listingBytes = listingHtml.toString().getBytes();
+        ResponseUtility.sendOKResponse(out, "text/html", listingBytes, useChunkedEncoding);
     }
 }

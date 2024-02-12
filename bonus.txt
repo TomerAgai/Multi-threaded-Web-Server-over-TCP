@@ -1,6 +1,9 @@
 Bonus Feature: Dynamic Directory Listing
 
-The server has been enhanced with a feature that dynamically generates and serves directory listings. When a client requests access to a directory path that exists on the server's root, instead of returning a "Forbidden" error, the server now generates a simple HTML page listing all the files and directories within the requested directory. Each listed item is a hyperlink, allowing the client to navigate deeper into the file structure or directly access files. This feature improves the usability of the server by providing a way to browse the server's content directly from a web browser, without prior knowledge of the server's file structure.
+The server has been enhanced with a feature that dynamically generates and serves directory listings.
+When a client requests access to a directory path that exists on the server's root, instead of returning a "Forbidden" error, the server now generates a simple HTML page listing all the files and directories within the requested directory.
+Each listed item is a hyperlink, allowing the client to navigate deeper into the file structure or directly access files.
+This feature improves the usability of the server by providing a way to browse the server's content directly from a web browser, without prior knowledge of the server's file structure.
 In addition, we added support to more content types such as: .mp4, .pdf, .doc and more.
 
 Implementation Details:

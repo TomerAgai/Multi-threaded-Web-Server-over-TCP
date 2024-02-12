@@ -31,7 +31,7 @@ public class HTTPRequestHandler {
                 handleGETorHEADRequest(path, true);
                 break;
             case "POST":
-                handlePOSTRequest(path);
+                handleParamsInfo(path);
                 break;
             case "HEAD":
                 handleGETorHEADRequest(path, false);
@@ -50,12 +50,14 @@ public class HTTPRequestHandler {
         if ("/".equals(path)) {
             contentServer.serveStaticContent(outputStream, config.getProperty("DefaultPage"), isGet,
                     useChunkedEncoding);
+        } else if ("/params_info.html".equals(path)) {
+            handleParamsInfo(path);
         } else {
             contentServer.serveStaticContent(outputStream, path, isGet, useChunkedEncoding);
         }
     }
 
-    private void handlePOSTRequest(String path) throws IOException {
+    private void handleParamsInfo(String path) throws IOException {
 
         if ("/params_info.html".equals(path)) {
             StringBuilder responseHtml = new StringBuilder("<html><body>");

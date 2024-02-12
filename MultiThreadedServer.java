@@ -33,7 +33,7 @@ public class MultiThreadedServer {
             System.out.println("Error starting server: " + e.getMessage());
         } finally {
             if (executor != null) {
-                executor.shutdown(); // Initiates an orderly shutdown
+                executor.shutdown();
             }
         }
     }

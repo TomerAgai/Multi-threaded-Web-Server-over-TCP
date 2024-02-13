@@ -8,7 +8,6 @@ public class ContentServer {
     public ContentServer(String rootDirectory) {
         if (rootDirectory.startsWith("~" + File.separator)) {
             this.rootDirectory = System.getProperty("user.home") + rootDirectory.substring(1);
-            System.out.println("Root directory: " + this.rootDirectory);
         } else {
             this.rootDirectory = rootDirectory;
         }
@@ -18,7 +17,6 @@ public class ContentServer {
             throws IOException {
         String filePath = path;
         File file = new File(rootDirectory, filePath);
-        System.out.println("file path:" + path);
         if (file.isDirectory()) {
             System.out.println("is a directory");
             // Instead of forbidding access, generate directory listing

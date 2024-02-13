@@ -17,9 +17,6 @@ class ClientHandler implements Runnable {
         try {
             in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
             out = clientSocket.getOutputStream();
-
-            // System.out.println("Handling request from " +
-            // clientSocket.getRemoteSocketAddress());
             HTTPRequest httpRequest = new HTTPRequest(in);
             HTTPRequestHandler requestHandler = new HTTPRequestHandler(httpRequest, out, config);
             requestHandler.handleRequest();

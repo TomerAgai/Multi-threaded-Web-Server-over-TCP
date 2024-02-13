@@ -23,9 +23,6 @@ public class HTTPRequestHandler {
         String method = httpRequest.getMethod();
         String path = httpRequest.getPath();
         useChunkedEncoding = "yes".equalsIgnoreCase(httpRequest.getHeaders().get("chunked"));
-        // System.out.println("http request: " + httpRequest.getHeaders() + " " +
-        // httpRequest.getParameters());
-        // System.out.println("Handling " + method + " request for " + path);
         switch (method) {
             case "GET":
                 handleGETorHEADRequest(path, true);
